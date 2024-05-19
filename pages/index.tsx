@@ -1,26 +1,16 @@
+import {useEffect, useState} from "react"
 import Head from "next/head";
 import clientPromise from "../lib/mongodb";
 
-export async function getServerSideProps() {
-  try {
-    const client = await clientPromise;
-    const db = client.db("myDatabase");  // Specify your database name here
-    
-    // You can execute queries here if needed, for example:
-    // const data = await db.collection('yourCollection').find().toArray();
-    
-    return {
-      props: { isConnected: true },
-    };
-  } catch (e) {
-    console.error("MongoDB connection error:", e);
-    return {
-      props: { isConnected: false },
-    };
-  }
-};
-
 export default function Home({ isConnected }) {
+  const [restaurants, setRestaurants] = useState([])
+  useEffect(() => {
+    (async () => {
+      const results = await fetch("/api/list");
+      const resultsJson = await results.json();
+      setRestaurants(resultsJson);
+    })();
+  }, []);
   return (
     <div className="container">
       <Head>
@@ -33,51 +23,15 @@ export default function Home({ isConnected }) {
           Welcome to <a href="https://nextjs.org">Next.js with MongoDB!</a>
         </h1>
 
-        {isConnected ? (
-          <h2 className="subtitle">You are connected to MongoDB</h2>
-        ) : (
-          <h2 className="subtitle">
-            You are NOT connected to MongoDB. Check the <code>README.md</code> for instructions.
-          </h2>
-        )}
-
-        <p className="description">
-          Get started by editing <code>pages/index.js</code>
-        </p>
-
         <div className="grid">
-          <a href="https://nextjs.org/docs" className="card">
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className="card">
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/canary/examples"
-            className="card"
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="card"
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
+          {restaurants.map((restaurant) => (
+            <div className="card" key={restaurant._id}>
+              <h2>{restaurant.name}</h2>
+              <p>{restaurant.cuisine}</p>
+          </div>
+        ))}
         </div>
-      </main>
-
+      </main>  
       <footer>
         <a
           href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
@@ -90,3 +44,18 @@ export default function Home({ isConnected }) {
     </div>
   );
 }
+
+export async function getServerSideProps(context) {
+  try {
+    await clientPromise;
+    return {
+      props: { isConnected: true },
+    };
+  } catch (e) {
+    console.error("MongoDB connection error:", e);
+    return {
+      props: { isConnected: false },
+    };
+  }
+};
+
