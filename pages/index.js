@@ -1,16 +1,29 @@
-import {useEffect, useState} from "react"
+import { useEffect, useState } from "react";
 import Head from "next/head";
 import clientPromise from "../lib/mongodb";
 
 export default function Home({ isConnected }) {
-  const [restaurants, setRestaurants] = useState([])
+  const [restaurants, setRestaurants] = useState([]);
+
   useEffect(() => {
     (async () => {
-      const results = await fetch("/api/list");
-      const resultsJson = await results.json();
-      setRestaurants(resultsJson);
+      try {
+        const results = await fetch("/api/list");
+        const resultsJson = await results.json();
+        // Ensure that the fetched data is an array
+        if (Array.isArray(resultsJson)) {
+          setRestaurants(resultsJson);
+        } else {
+          console.error("Fetched data is not an array:", resultsJson);
+          setRestaurants([]); // Reset to an empty array if the data is not as expected
+        }
+      } catch (error) {
+        console.error("Error fetching data:", error);
+        setRestaurants([]); // Reset to an empty array in case of error
+      }
     })();
   }, []);
+
   return (
     <div className="container">
       <Head>
@@ -20,7 +33,7 @@ export default function Home({ isConnected }) {
 
       <main>
         <h1 className="title">
-          Welcome to <a href="https://nextjs.org">Next.js with MongoDB!</a>
+         WEEE <a href="https://nextjs.org">PEPE!</a>
         </h1>
 
         <div className="grid">
@@ -28,10 +41,11 @@ export default function Home({ isConnected }) {
             <div className="card" key={restaurant._id}>
               <h2>{restaurant.name}</h2>
               <p>{restaurant.cuisine}</p>
-          </div>
-        ))}
+            </div>
+          ))}
         </div>
-      </main>  
+      </main>
+      
       <footer>
         <a
           href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
@@ -57,5 +71,4 @@ export async function getServerSideProps(context) {
       props: { isConnected: false },
     };
   }
-};
-
+}
